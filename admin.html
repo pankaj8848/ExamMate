@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - ExamMate & NotesMaker</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Admin Login</h3>
+            </div>
+            <div class="modal-body">
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Username</label>
+                        <input type="text" id="adminUsername" name="username" placeholder="Enter admin username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" name="password" placeholder="Enter admin password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" class="dashboard" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="admin-header">
+                <div class="admin-avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>Admin Panel</h3>
+                <p>Pankaj Kumar</p>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="#users" class="nav-link" onclick="showSection('users')"><i class="fas fa-users"></i> Users</a></li>
+                    <li><a href="#notes" class="nav-link" onclick="showSection('notes')"><i class="fas fa-book"></i> Notes Management</a></li>
+                    <li><a href="#uploads" class="nav-link" onclick="showSection('uploads')"><i class="fas fa-upload"></i> Uploads</a></li>
+                    <li><a href="#payments" class="nav-link" onclick="showSection('payments')"><i class="fas fa-credit-card"></i> Payments</a></li>
+                    <li><a href="#website" class="nav-link" onclick="showSection('website')"><i class="fas fa-cog"></i> Website Settings</a></li>
+                    <li><a href="#chat" class="nav-link" onclick="showSection('chat')"><i class="fas fa-comments"></i> Admin Chat</a></li>
+                    <li><a href="#analytics" class="nav-link" onclick="showSection('analytics')"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-secondary" onclick="logoutAdmin()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="section active">
+                <div class="section-header">
+                    <h1>Admin Dashboard</h1>
+                    <p>Welcome to ExamMate & NotesMaker Admin Panel</p>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-book"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalNotes">0</h3>
+                            <p>Total Notes</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-upload"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalUploads">0</h3>
+                            <p>Total Uploads</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-rupee-sign"></i></div>
+                        <div class="stat-content">
+                            <h3 id="totalRevenue">₹0</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="card">
+                        <h3>Recent Activity</h3>
+                        <div id="recentActivity" class="activity-list">
+                            <!-- Activity items will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="section">
+                <div class="section-header">
+                    <h1>User Management</h1>
+                    <p>Manage all registered users and their subscriptions</p>
+                </div>
+                
+                <div class="controls">
+                    <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
+                    <select id="planFilter" onchange="filterUsersByPlan()">
+                        <option value="all">All Plans</option>
+                        <option value="basic">Basic</option>
+                        <option value="standard">Standard</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                                <th>Join Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- User rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div id="notes-section" class="section">
+                <div class="section-header">
+                    <h1>Notes Management</h1>
+                    <p>Add, edit, and manage study notes</p>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="showAddNoteForm()">Add New Note</button>
+                    <input type="text" id="noteSearch" placeholder="Search notes..." onkeyup="searchNotes()">
+                </div>
+
+                <div class="table-container">
+                    <table id="notesTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Exam</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="notesTableBody">
+                            <!-- Note rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add/Edit Note Form -->
+                <div id="noteFormModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="noteFormTitle">Add New Note</h3>
+                            <span class="close" onclick="closeNoteForm()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <form id="noteForm">
+                                <input type="hidden" id="noteId">
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" id="noteTitle" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Exam</label>
+                                    <input type="text" id="noteExam" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Subject</label>
+                                    <input type="text" id="noteSubject" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pages</label>
+                                    <input type="number" id="notePages" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Price (₹)</label>
+                                    <input type="number" id="notePrice" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select id="noteStatus">
+                                        <option value="available">Available</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="locked">Locked</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea id="noteDescription" rows="4"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Features</label>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox" id="noteHardCopy"> Hard Copy Available</label>
+                                        <label><input type="checkbox" id="noteVideo"> Video Solutions</label>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Save Note</button>
+                                    <button type="button" class="btn btn-secondary" onclick="closeNoteForm()">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uploads Section -->
+            <div id="uploads-section" class="section">
+                <div class="section-header">
+                    <h1>Student Uploads</h1>
+                    <p>Review and manage student uploads</p>
+                </div>
+                
+                <div class="controls">
+                    <input type="text" id="uploadSearch" placeholder="Search uploads..." onkeyup="searchUploads()">
+                    <select id="statusFilter" onchange="filterUploadsByStatus()">
+                        <option value="all">All Status</option>
+                        <option value="uploaded">Uploaded</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table id="uploadsTable">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Exam</th>
+                                <th>Files</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uploadsTableBody">
+                            <!-- Upload rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payments Section -->
+            <div id="payments-section" class="section">
+                <div class="section-header">
+                    <h1>Payment Management</h1>
+                    <p>View and manage all transactions</p>
+                </div>
+                
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3 id="todayRevenue">₹0</h3>
+                            <p>Today's Revenue</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3 id="monthRevenue">₹0</h3>
+                            <p>This Month</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3 id="totalTransactions">0</h3>
+                            <p>Total Transactions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="paymentsTable">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>User</th>
+                                <th>Plan</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody">
+                            <!-- Payment rows will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Website Settings Section -->
+            <div id="website-section" class="section">
+                <div class="section-header">
+                    <h1>Website Settings</h1>
+                    <p>Customize website appearance and content</p>
+                </div>
+                
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Admin Information</h3>
+                        <form id="adminInfoForm">
+                            <div class="form-group">
+                                <label>Admin Name</label>
+                                <input type="text" id="adminName" value="Pankaj Kumar">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="adminEmail" value="pkh99314930@gmail.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Address</label>
+                                <textarea id="adminAddress" rows="3">D-417 Dabua Colony, Faridabad</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>WhatsApp Number</label>
+                                <input type="tel" id="adminPhone" value="7827587477">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Info</button>
+                        </form>
+                    </div>
+
+                    <div class="setting-card">
+                        <h3>Hero Section</h3>
+                        <form id="heroForm">
+                            <div class="form-group">
+                                <label>Main Title</label>
+                                <input type="text" id="heroTitle" value="ExamMate & NotesMaker">
+                            </div>
+                            <div class="form-group">
+                                <label>Subtitle</label>
+                                <input type="text" id="heroSubtitle" value="Your Complete Exam Preparation Solution">
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="heroDescription" rows="3">Upload previous year questions, get expertly solved notes, and prepare for your exams with our comprehensive platform.</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Hero</button>
+                        </form>
+                    </div>
+
+                    <div class="setting-card">
+                        <h3>Background Customization</h3>
+                        <form id="backgroundForm">
+                            <div class="form-group">
+                                <label>Background Type</label>
+                                <select id="backgroundType" onchange="toggleBackgroundOptions()">
+                                    <option value="gradient">Gradient</option>
+                                    <option value="image">Custom Image</option>
+                                    <option value="pattern">Pattern</option>
+                                </select>
+                            </div>
+                            
+                            <div id="gradientOptions">
+                                <div class="form-group">
+                                    <label>Primary Color</label>
+                                    <input type="color" id="primaryColor" value="#667eea">
+                                </div>
+                                <div class="form-group">
+                                    <label>Secondary Color</label>
+                                    <input type="color" id="secondaryColor" value="#764ba2">
+                                </div>
+                            </div>
+                            
+                            <div id="imageOptions" style="display: none;">
+                                <div class="form-group">
+                                    <label>Upload Background Image</label>
+                                    <input type="file" id="backgroundImage" accept="image/*">
+                                    <div class="image-preview" id="backgroundImagePreview"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Image Opacity</label>
+                                    <input type="range" id="imageOpacity" min="0" max="1" step="0.1" value="0.5">
+                                </div>
+                            </div>
+                            
+                            <div id="patternOptions" style="display: none;">
+                                <div class="form-group">
+                                    <label>Select Pattern</label>
+                                    <select id="patternType">
+                                        <option value="dots">Dots</option>
+                                        <option value="lines">Lines</option>
+                                        <option value="waves">Waves</option>
+                                        <option value="geometric">Geometric</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pattern Color</label>
+                                    <input type="color" id="patternColor" value="#ffffff">
+                                </div>
+                                <div class="form-group">
+                                    <label>Pattern Opacity</label>
+                                    <input type="range" id="patternOpacity" min="0" max="1" step="0.1" value="0.2">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Preview</label>
+                                <div class="background-preview" id="backgroundPreview">
+                                    <div class="preview-content">
+                                        <h4>Preview</h4>
+                                        <p>This is how your hero section will look</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Apply Background</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetBackground()">Reset to Default</button>
+                        </form>
+                    </div>
+
+                    <div class="setting-card">
+                        <h3>Pricing Plans</h3>
+                        <div id="pricingPlans">
+                            <!-- Pricing plan forms will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="setting-card">
+                        <h3>Statistics</h3>
+                        <form id="statsForm">
+                            <div class="form-group">
+                                <label>Students Served</label>
+                                <input type="number" id="statStudents" value="1000">
+                            </div>
+                            <div class="form-group">
+                                <label>Notes Created</label>
+                                <input type="number" id="statNotes" value="500">
+                            </div>
+                            <div class="form-group">
+                                <label>Success Rate (%)</label>
+                                <input type="number" id="statSuccess" value="95">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Stats</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Section -->
+            <div id="chat-section" class="section">
+                <div class="section-header">
+                    <h1>Admin Chat</h1>
+                    <p>Team communication and support</p>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="adminChatMessages">
+                        <!-- Chat messages will be loaded here -->
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="adminChatInput" placeholder="Type your message...">
+                        <button onclick="sendAdminMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analytics-section" class="section">
+                <div class="section-header">
+                    <h1>Analytics</h1>
+                    <p>Website performance and user insights</p>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="chart-card">
+                        <h3>Monthly Revenue</h3>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>User Growth</h3>
+                        <canvas id="userChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Note Downloads</h3>
+                        <canvas id="downloadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

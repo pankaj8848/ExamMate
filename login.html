@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login - ExamMate & NotesMaker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Firebase SDK v9+ Modular -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBqj_5NpbrxeVw7daBiuikVvzfUW4GpQ8s",
+          authDomain: "exammate-and-notesmaker.firebaseapp.com",
+          projectId: "exammate-and-notesmaker",
+          storageBucket: "exammate-and-notesmaker.firebasestorage.app",
+          messagingSenderId: "51513185604",
+          appId: "1:51513185604:web:3440a6ee5039d315ad3311",
+          measurementId: "G-EW7HYL6JJP"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // Make Firebase available globally for the login.js module
+        window.firebase = {
+            app,
+            auth,
+            db,
+            storage,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            sendPasswordResetEmail,
+            signInWithPhoneNumber,
+            PhoneAuthProvider,
+            signInWithCredential,
+            onAuthStateChanged,
+            setPersistence,
+            browserLocalPersistence,
+            browserSessionPersistence,
+            doc,
+            getDoc,
+            setDoc,
+            serverTimestamp
+        };
+    </script>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="background-animation">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        <div class="bg-shape bg-shape-3"></div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <!-- Logo Section -->
+        <div class="login-logo">
+            <div class="logo-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h1>ExamMate & NotesMaker</h1>
+            <p>Your Complete Exam Preparation Solution</p>
+        </div>
+
+        <!-- Login Form Section -->
+        <div class="login-form-container">
+            <div class="form-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to access your study materials</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" name="email" placeholder="Enter your email address" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password" onclick="showForgotPassword()">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+
+                <div class="divider">
+                    <span>OR</span>
+                </div>
+
+                <!-- Phone Login Section -->
+                <div class="phone-login-section">
+                    <div class="phone-login-header">
+                        <h3>Quick Login with Phone</h3>
+                        <p>Use your phone number for instant access</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phoneInput">Phone Number</label>
+                        <div class="input-group">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="phoneInput" name="phone" placeholder="Enter your phone number" pattern="[0-9]{10}" maxlength="10">
+                        </div>
+                        <small class="input-hint">Enter 10-digit Indian phone number</small>
+                    </div>
+
+                    <div class="form-group" id="otpSection" style="display: none;">
+                        <label for="otpInput">Enter OTP</label>
+                        <div class="input-group">
+                            <i class="fas fa-key"></i>
+                            <input type="text" id="otpInput" name="otp" placeholder="Enter 6-digit OTP" maxlength="6">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-phone-login" onclick="sendOTP()">
+                        <i class="fas fa-mobile-alt"></i>
+                        Send OTP
+                    </button>
+                    <button type="button" class="btn btn-primary btn-verify-otp" id="verifyOTPBtn" style="display: none;" onclick="verifyOTP()">
+                        <i class="fas fa-check"></i>
+                        Verify OTP
+                    </button>
+                </div>
+            </form>
+
+            <!-- Register Section -->
+            <div class="register-section">
+                <p>Don't have an account? <a href="#" onclick="showRegisterForm()">Sign up here</a></p>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Please wait...</p>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="messageContainer" class="message-container"></div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="login-features">
+            <h3>Why Choose Us?</h3>
+            <div class="features-list">
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <h4>Secure Access</h4>
+                        <p>Your data is protected with industry-standard security</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-file-pdf"></i>
+                    <div>
+                        <h4>Quality Notes</h4>
+                        <p>Expertly solved questions and comprehensive study materials</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-video"></i>
+                    <div>
+                        <h4>Video Solutions</h4>
+                        <p>Step-by-step video explanations for complex questions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Account</h3>
+                <span class="close" onclick="closeRegisterModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="regName">Full Name</label>
+                        <div class="input-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="regName" name="name" placeholder="Enter your full name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regEmail">Email Address</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="regEmail" name="email" placeholder="Enter your email address" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPhone">Phone Number</label>
+                        <div class="input-group">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="regPhone" name="phone" placeholder="Enter your phone number" pattern="[0-9]{10}" maxlength="10" required>
+                        </div>
+                        <small class="input-hint">Enter 10-digit Indian phone number</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="regPassword" name="password" placeholder="Create a strong password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('regPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <small class="input-hint">Password must be at least 6 characters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password</label>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="regConfirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('regConfirmPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="termsAgreement" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#" onclick="showModal('termsModal')">Terms & Conditions</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-register">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <span class="close" onclick="closeForgotPasswordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="forgotPasswordForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email Address</label>
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="resetEmail" name="email" placeholder="Enter your email address" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Reset Link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Terms and Conditions</h3>
+                <span class="close" onclick="closeModal('termsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="terms-content">
+                    <h4>1. Acceptance of Terms</h4>
+                    <p>By accessing and using ExamMate & NotesMaker, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h4>2. Use License</h4>
+                    <p>Permission is granted to temporarily download one copy of the materials on ExamMate & NotesMaker for personal, non-commercial transitory viewing only.</p>
+                    
+                    <h4>3. User Responsibilities</h4>
+                    <ul>
+                        <li>Provide accurate and complete information during registration</li>
+                        <li>Maintain the security of your account and password</li>
+                        <li>Be responsible for all activities that occur under your account</li>
+                        <li>Use the service only for lawful purposes</li>
+                    </ul>
+                    
+                    <h4>4. Intellectual Property</h4>
+                    <p>All content, trademarks, data, and other materials provided on this website are the intellectual property of ExamMate & NotesMaker or its third-party licensors.</p>
+                    
+                    <h4>5. Payment Terms</h4>
+                    <p>All payments are non-refundable except as specifically provided in our Return and Refund Policy. Subscription fees will be automatically renewed unless canceled.</p>
+                    
+                    <h4>6. Limitation of Liability</h4>
+                    <p>ExamMate & NotesMaker shall not be held liable for any indirect, incidental, special, consequential or punitive damages.</p>
+                    
+                    <h4>7. Changes to Terms</h4>
+                    <p>We reserve the right to modify these terms at any time. Your continued use of the service after any such changes constitutes your acceptance of the new terms.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Back to Main Site -->
+    <div class="back-to-site">
+        <a href="index.html" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Main Site
+        </a>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

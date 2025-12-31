@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamMate & NotesMaker - Your Exam Companion</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- WhatsApp Chat Button -->
+    <div class="whatsapp-float" onclick="openWhatsAppChat()">
+        <i class="fab fa-whatsapp"></i>
+        <span>Chat with Admin</span>
+    </div>
+
+    <!-- Admin Chat Modal -->
+    <div id="adminChatModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Admin Team Chat</h3>
+                <span class="close" onclick="closeAdminChat()">&times;</span>
+            </div>
+            <div class="chat-container" id="adminChatContainer">
+                <div class="chat-message admin">
+                    <div class="message-content">Welcome to Admin Team Chat! Only authorized team members can access this.</div>
+                    <div class="message-time">Admin • Now</div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="adminChatInput" placeholder="Type your message...">
+                <button onclick="sendAdminMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#home">
+                    <i class="fas fa-graduation-cap"></i>
+                    ExamMate & NotesMaker
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#services" class="nav-link">Services</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#pricing" class="nav-link">Pricing</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#upload" class="nav-link">Upload</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#notes" class="nav-link">Notes</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button class="btn btn-secondary" onclick="openAdminPanel()">Admin Panel</button>
+                <button class="btn btn-secondary" onclick="openAdminChat()">Admin Chat</button>
+                <button class="btn btn-primary" onclick="openLoginModal()">Login/Register</button>
+            </div>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login/Register Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Login / Register</h3>
+                <span class="close" onclick="closeLoginModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="showTab('login')">Login</button>
+                    <button class="tab-btn" onclick="showTab('register')">Register</button>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <input type="email" placeholder="Email" required>
+                    <input type="password" placeholder="Password" required>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+                <form id="registerForm" class="auth-form" style="display: none;">
+                    <input type="text" placeholder="Full Name" required>
+                    <input type="email" placeholder="Email" required>
+                    <input type="tel" placeholder="Phone Number" required>
+                    <input type="password" placeholder="Password" required>
+                    <input type="password" placeholder="Confirm Password" required>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-background">
+            <div class="hero-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
+            </div>
+        </div>
+        <div class="hero-container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="badge-text">Trusted by 1000+ Students</span>
+                </div>
+                <h1 class="hero-title">ExamMate & NotesMaker</h1>
+                <p class="hero-subtitle">Your Complete Exam Preparation Solution</p>
+                <p class="hero-description">Upload previous year questions, get expertly solved notes, and prepare for your exams with our comprehensive platform. Join thousands of successful students who have achieved their academic goals with our expert guidance.</p>
+                <div class="hero-buttons">
+                    <a href="#upload" class="btn btn-primary">Upload Questions</a>
+                    <a href="#notes" class="btn btn-secondary">View Notes</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">95%</span>
+                        <span class="stat-label">Success Rate</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Notes Created</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Support</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-circles">
+                    <div class="circle circle-1"></div>
+                    <div class="circle circle-2"></div>
+                    <div class="circle circle-3"></div>
+                </div>
+                <div class="hero-content-visual">
+                    <div class="visual-item">
+                        <div class="visual-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="visual-text">
+                            <h4>Expert Guidance</h4>
+                            <p>Professional educators</p>
+                        </div>
+                    </div>
+                    <div class="visual-item">
+                        <div class="visual-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="visual-text">
+                            <h4>Quality Notes</h4>
+                            <p>Comprehensive study material</p>
+                        </div>
+                    </div>
+                    <div class="visual-item">
+                        <div class="visual-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="visual-text">
+                            <h4>Progress Tracking</h4>
+                            <p>Monitor your improvement</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">About ExamMate & NotesMaker</h2>
+                <p class="section-subtitle">Your trusted exam preparation partner</p>
+            </div>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Welcome to ExamMate & NotesMaker</h3>
+                    <p>We are dedicated to helping students achieve their academic goals by providing comprehensive exam preparation materials. Our platform connects students with expert educators who solve previous year questions and create detailed study notes.</p>
+                    
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <h4>1000+</h4>
+                            <p>Students Served</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>500+</h4>
+                            <p>Notes Created</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>95%</h4>
+                            <p>Success Rate</p>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-info">
+                        <h4>Admin Information</h4>
+                        <p><strong>Name:</strong> Pankaj Kumar</p>
+                        <p><strong>Email:</strong> pkh99314930@gmail.com</p>
+                        <p><strong>Address:</strong> D-417 Dabua Colony, Faridabad</p>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="profile-circle"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Services</h2>
+                <p class="section-subtitle">Comprehensive exam preparation solutions</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <h3>Question Upload</h3>
+                    <p>Upload your previous year questions and syllabus. Our expert team will analyze and solve them for you.</p>
+                <button class="btn btn-primary" onclick="location.href='services/question-upload.html'">
+                        <i class="fas fa-upload"></i> Upload Now
+                    </button>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>Expert Notes</h3>
+                    <p>Get professionally solved questions and comprehensive study notes in PDF format.</p>
+                    <button class="btn btn-primary" onclick="location.href='services/expert-notes.html'">
+                        <i class="fas fa-book"></i> Browse Notes
+                    </button>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-print"></i>
+                    </div>
+                    <h3>Hard Copy Notes</h3>
+                    <p>Receive printed copies of your notes delivered to your doorstep.</p>
+                    <button class="btn btn-primary" onclick="location.href='services/hard-copy-notes.html'">
+                        <i class="fas fa-print"></i> Order Now
+                    </button>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3>Video Solutions</h3>
+                    <p>Access video explanations for complex questions and concepts.</p>
+                    <button class="btn btn-primary" onclick="location.href='services/expert-notes.html'">
+                        <i class="fas fa-play"></i> Watch Videos
+                    </button>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3>Image Upload</h3>
+                    <p>Upload images of questions and diagrams for detailed analysis.</p>
+                    <button class="btn btn-primary" onclick="location.href='services/question-upload.html'">
+                        <i class="fas fa-camera"></i> Upload Images
+                    </button>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure Access</h3>
+                    <p>Protected PDF viewing with anti-screenshot measures and secure downloads.</p>
+                    <button class="btn btn-primary" onclick="location.href='services/expert-notes.html'">
+                        <i class="fas fa-lock"></i> Secure Access
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Pricing Plans</h2>
+                <p class="section-subtitle">Choose the perfect plan for your needs</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Basic</h3>
+                        <div class="price"><span class="currency">₹</span><span class="amount">499</span><span class="period">/month</span></div>
+                    </div>
+                    <ul class="features">
+                        <li>✓ Preview 5 pages of PDFs</li>
+                        <li>✗ No downloads</li>
+                        <li>✗ No hard copies</li>
+                        <li>✗ No video solutions</li>
+                        <li>✓ Basic support</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="initiatePayment('basic')">Get Started</button>
+                </div>
+                
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3>Standard</h3>
+                        <div class="price"><span class="currency">₹</span><span class="amount">999</span><span class="period">/month</span></div>
+                    </div>
+                    <ul class="features">
+                        <li>✓ Full PDF downloads (1 time)</li>
+                        <li>✓ 5 hard copies per month</li>
+                        <li>✓ Video solutions</li>
+                        <li>✓ Image uploads</li>
+                        <li>✓ Priority support</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="initiatePayment('standard')">Get Started</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Premium</h3>
+                        <div class="price"><span class="currency">₹</span><span class="amount">1999</span><span class="period">/month</span></div>
+                    </div>
+                    <ul class="features">
+                        <li>✓ Unlimited PDF downloads</li>
+                        <li>✓ 15 hard copies per month</li>
+                        <li>✓ All video solutions</li>
+                        <li>✓ Priority uploads</li>
+                        <li>✓ 24/7 premium support</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="initiatePayment('premium')">Get Started</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload" class="upload">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Upload Your Materials</h2>
+                <p class="section-subtitle">Submit your questions and syllabus for expert solutions</p>
+            </div>
+            <div class="upload-content">
+                <div class="upload-form">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="studentName">Your Name</label>
+                            <input type="text" id="studentName" name="studentName" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentEmail">Email Address</label>
+                            <input type="email" id="studentEmail" name="studentEmail" placeholder="your.email@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="examName">Exam Name</label>
+                            <input type="text" id="examName" name="examName" placeholder="e.g., JEE Main, NEET, UPSC" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="syllabus">Syllabus</label>
+                            <textarea id="syllabus" name="syllabus" placeholder="Paste your syllabus here..." rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="upload-section">
+                            <h4>Upload Previous Year Questions</h4>
+                            <div class="file-upload">
+                                <input type="file" id="questionFiles" name="questionFiles" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" multiple>
+                                <label for="questionFiles">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose Files</span>
+                                </label>
+                                <div class="file-preview" id="filePreview"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-section">
+                            <h4>Upload Images</h4>
+                            <div class="image-upload">
+                                <input type="file" id="imageFiles" name="imageFiles" accept="image/*" multiple>
+                                <label for="imageFiles">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Choose Images</span>
+                                </label>
+                                <div class="image-preview" id="imagePreview"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-section">
+                            <h4>Upload Videos (For Admin Use)</h4>
+                            <div class="video-upload">
+                                <input type="file" id="videoFiles" name="videoFiles" accept="video/*">
+                                <label for="videoFiles">
+                                    <i class="fas fa-video"></i>
+                                    <span>Choose Video</span>
+                                </label>
+                                <div class="video-preview" id="videoPreview"></div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Submit Upload</button>
+                    </form>
+                </div>
+                
+                <div class="upload-info">
+                    <h3>Upload Guidelines</h3>
+                    <ul>
+                        <li>✓ Accept PDF, JPG, PNG, DOC files for questions</li>
+                        <li>✓ Maximum file size: 50MB per file</li>
+                        <li>✓ High-quality images for better analysis</li>
+                        <li>✓ Clear syllabus for accurate note preparation</li>
+                        <li>✓ Admin team will review and process your uploads</li>
+                    </ul>
+                    <div class="upload-status">
+                        <h4>Processing Time</h4>
+                        <p><strong>Standard:</strong> 24-48 hours</p>
+                        <p><strong>Premium:</strong> 12-24 hours</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notes Section -->
+    <section id="notes" class="notes">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Available Notes</h2>
+                <p class="section-subtitle">Access expertly prepared study materials</p>
+            </div>
+            <div class="notes-grid" id="notesGrid">
+                <!-- Notes will be loaded here dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Contact Us</h2>
+                <p class="section-subtitle">Get in touch with our team</p>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h4>Address</h4>
+                            <p>D-417 Dabua Colony<br>Faridabad, Haryana<br>India - 121001</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <p>pkh99314930@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h4>Phone</h4>
+                            <p>+91 7827587477</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fab fa-whatsapp"></i>
+                        <div>
+                            <h4>WhatsApp</h4>
+                            <p>Chat with Admin</p>
+                            <button class="btn btn-secondary" onclick="openWhatsAppChat()">Start Chat</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <form action="#" method="POST">
+                        <div class="form-group">
+                            <input type="text" name="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" name="email" placeholder="Your Email" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" name="phone" placeholder="Phone Number" required>
+                        </div>
+                        <div class="form-group">
+                            <select name="subject" required>
+                                <option value="">Select Subject</option>
+                                <option value="notes">Study Notes</option>
+                                <option value="upload">Upload Questions</option>
+                                <option value="payment">Payment Issues</option>
+                                <option value="general">General Inquiry</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>ExamMate & NotesMaker</h3>
+                    <p>Your trusted exam preparation partner</p>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#upload">Upload</a></li>
+                        <li><a href="#notes">Notes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#terms" onclick="showModal('termsModal')">Terms & Conditions</a></li>
+                        <li><a href="#privacy" onclick="showModal('privacyModal')">Privacy Policy</a></li>
+                        <li><a href="#disclaimer" onclick="showModal('disclaimerModal')">Disclaimer</a></li>
+                        <li><a href="#refund" onclick="showModal('refundModal')">Return & Refund Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-copyright">
+                    <p>&copy; 2024 ExamMate & NotesMaker. All rights reserved.</p>
+                    <p>Admin: Pankaj Kumar</p>
+                    <div class="payment-methods">
+                        <h5>Payment Methods</h5>
+                        <div class="payment-icons">
+                            <i class="fab fa-cc-visa"></i>
+                            <i class="fab fa-cc-mastercard"></i>
+                            <i class="fab fa-cc-paypal"></i>
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Terms and Conditions</h3>
+                <span class="close" onclick="closeModal('termsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="terms-content">
+                    <h4>1. Acceptance of Terms</h4>
+                    <p>By accessing and using ExamMate & NotesMaker, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h4>2. Use License</h4>
+                    <p>Permission is granted to temporarily download one copy of the materials on ExamMate & NotesMaker for personal, non-commercial transitory viewing only.</p>
+                    
+                    <h4>3. User Responsibilities</h4>
+                    <ul>
+                        <li>Provide accurate and complete information during registration</li>
+                        <li>Maintain the security of your account and password</li>
+                        <li>Be responsible for all activities that occur under your account</li>
+                        <li>Use the service only for lawful purposes</li>
+                    </ul>
+                    
+                    <h4>4. Intellectual Property</h4>
+                    <p>All content, trademarks, data, and other materials provided on this website are the intellectual property of ExamMate & NotesMaker or its third-party licensors.</p>
+                    
+                    <h4>5. Payment Terms</h4>
+                    <p>All payments are non-refundable except as specifically provided in our Return and Refund Policy. Subscription fees will be automatically renewed unless canceled.</p>
+                    
+                    <h4>6. Limitation of Liability</h4>
+                    <p>ExamMate & NotesMaker shall not be held liable for any indirect, incidental, special, consequential or punitive damages.</p>
+                    
+                    <h4>7. Changes to Terms</h4>
+                    <p>We reserve the right to modify these terms at any time. Your continued use of the service after any such changes constitutes your acceptance of the new terms.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Privacy Policy</h3>
+                <span class="close" onclick="closeModal('privacyModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <h4>1. Information We Collect</h4>
+                    <p>We collect personal information that you provide to us when you register, make purchases, or use our services, including:</p>
+                    <ul>
+                        <li>Personal identification information (name, email address, phone number)</li>
+                        <li>Payment information (processed through secure payment gateways)</li>
+                        <li>Academic information (exam names, syllabus, uploaded materials)</li>
+                    </ul>
+                    
+                    <h4>2. How We Use Your Information</h4>
+                    <ul>
+                        <li>To provide and maintain our services</li>
+                        <li>To process transactions and send receipts</li>
+                        <li>To communicate with you about your account</li>
+                        <li>To improve our services and develop new features</li>
+                        <li>To comply with legal obligations</li>
+                    </ul>
+                    
+                    <h4>3. Information Sharing</h4>
+                    <p>We do not sell, trade, or otherwise transfer your personal information to third parties, except:</p>
+                    <ul>
+                        <li>To trusted third parties who assist us in operating our website</li>
+                        <li>When required by law or to protect our rights</li>
+                        <li>To any successor or assignee in connection with a merger or acquisition</li>
+                    </ul>
+                    
+                    <h4>4. Data Security</h4>
+                    <p>We implement appropriate security measures to protect against unauthorized access, alteration, disclosure, or destruction of information.</p>
+                    
+                    <h4>5. Your Rights</h4>
+                    <ul>
+                        <li>Access to your personal information</li>
+                        <li>Correction of inaccurate personal information</li>
+                        <li>Deletion of your personal information</li>
+                        <li>Objection to processing of your personal information</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Disclaimer Modal -->
+    <div id="disclaimerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Disclaimer</h3>
+                <span class="close" onclick="closeModal('disclaimerModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="disclaimer-content">
+                    <h4>1. Educational Content</h4>
+                    <p>The study materials, notes, and solutions provided by ExamMate & NotesMaker are for educational purposes only and should not be considered as professional academic advice.</p>
+                    
+                    <h4>2. Accuracy of Information</h4>
+                    <p>While we strive to provide accurate and up-to-date information, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, or reliability of the content.</p>
+                    
+                    <h4>3. Exam Results</h4>
+                    <p>Use of our materials does not guarantee success in any examination. Exam results depend on individual preparation, understanding, and performance.</p>
+                    
+                    <h4>4. Third-Party Content</h4>
+                    <p>Our website may contain links to third-party websites or content. We are not responsible for the content or practices of such third-party sites.</p>
+                    
+                    <h4>5. Professional Advice</h4>
+                    <p>Nothing on our website constitutes professional advice. For specific academic guidance, please consult with qualified educators or professionals.</p>
+                    
+                    <h4>6. Limitation of Liability</h4>
+                    <p>ExamMate & NotesMaker shall not be liable for any direct, indirect, incidental, or consequential damages arising from the use of our services or materials.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return and Refund Policy Modal -->
+    <div id="refundModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Return and Refund Policy</h3>
+                <span class="close" onclick="closeModal('refundModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="refund-content">
+                    <h4>1. Digital Products</h4>
+                    <p>Due to the nature of digital products (PDF downloads, video access), all sales are final and non-refundable once access has been provided.</p>
+                    
+                    <h4>2. Subscription Services</h4>
+                    <ul>
+                        <li>Subscriptions are non-refundable and will continue until canceled</li>
+                        <li>No refunds will be provided for partial use of subscription period</li>
+                        <li>Users may cancel their subscription at any time</li>
+                    </ul>
+                    
+                    <h4>3. Hard Copy Materials</h4>
+                    <p>Physical products (printed notes) may be returned within 7 days of delivery if they are in original, unused condition. Return shipping costs are the responsibility of the customer.</p>
+                    
+                    <h4>4. Technical Issues</h4>
+                    <p>If you experience technical difficulties accessing our digital content, please contact our support team. We will work to resolve the issue promptly.</p>
+                    
+                    <h4>5. Refund Process</h4>
+                    <ul>
+                        <li>Refund requests must be submitted in writing</li>
+                        <li>Processing time for approved refunds is 5-7 business days</li>
+                        <li>Refunds will be issued to the original payment method</li>
+                    </ul>
+                    
+                    <h4>6. Exceptions</h4>
+                    <p>We reserve the right to refuse refunds in cases of suspected abuse, violation of terms of service, or fraudulent activity.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
